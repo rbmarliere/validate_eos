@@ -66,7 +66,7 @@ eosiovalidate_contract()
     code=$(${cleos} get code ${CONTRACT} 2>/dev/null | cut -d' ' -f3)
     sum=$(sha256sum ${WASM_PATH} | cut -d' ' -f1)
     if [ "${code}" = "" ]; then
-        printf "error: code not found\n"
+        printf "error: code for ${CONTRACT} not found\n"
         return 1
     fi
     if [ "${code}" != "${sum}" ]; then
@@ -88,9 +88,15 @@ eosiovalidate_contracts()
         return 1
     fi
 
-    eosiovalidate_contract "eosio" ${CONTRACTS_DIR}/eosio.bios/eosio.bios.wasm || return 1
-    eosiovalidate_contract "eosio.msig" ${CONTRACTS_DIR}/eosio.msig/eosio.msig.wasm || return 1
-    eosiovalidate_contract "eosio.system" ${CONTRACTS_DIR}/eosio.system/eosio.system.wasm || return 1
-    eosiovalidate_contract "eosio.token" ${CONTRACTS_DIR}/eosio.token/eosio.token.wasm || return 1
+    eosiovalidate_contract "eosio" ${CONTRACTS_DIR}/eosio.bios/eosio.bios.wasm
+    eosiovalidate_contract "eosio.msig" ${CONTRACTS_DIR}/eosio.msig/eosio.msig.wasm
+    eosiovalidate_contract "eosio.system" ${CONTRACTS_DIR}/eosio.system/eosio.system.wasm
+    eosiovalidate_contract "eosio.token" ${CONTRACTS_DIR}/eosio.token/eosio.token.wasm
 }
 
+eosiovalidate_accounts()
+{
+    #['eosio', 'eosio.bpay', 'eosio.msig', 'eosio.names','eosio.ram','eosio.ramfee','eosio.saving','eosio.stake','eosio.token', 'eosio.vpay']
+    #only eosio permission
+    #eosio resignation?
+}
