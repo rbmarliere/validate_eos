@@ -6,13 +6,15 @@ eosiovalidate()
 {
     eosiocheck || return 1
     if prompt_input_yN "validate snapshot"; then
-        printf "absolute path to the csv file: "
+        printf "path to the csv file: "
         read snapshot
+        printf '\n'
         eosiovalidate_snapshot ${snapshot} || return 1
     fi
     if prompt_input_yN "validate contracts"; then
-        printf "absolute path to the built contracts directory: "
+        printf "path to the built contracts directory: "
         read contracts
+        printf '\n'
         eosiovalidate_contracts ${contracts} || return 1
     fi
 }
