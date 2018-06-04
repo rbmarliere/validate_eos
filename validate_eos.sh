@@ -4,6 +4,21 @@ source $(dirname "$0")/prompt_input_yN/prompt_input_yN.sh
 
 eosiovalidate()
 {
+    eosiocheck || return 1
+    if prompt_input_yN "validate snapshot"; then
+        printf "absolute path to the csv file: "
+        read snapshot
+        eosiovalidate_snapshot ${snapshot} || return 1
+    fi
+    if prompt_input_yN "validate contracts"; then
+        printf "absolute path to the built contracts directory: "
+        read contracts
+        eosiovalidate_contracts ${contracts} || return 1
+    fi
+}
+
+eosiovalidate_snapshot()
+{
     if [ $# -lt 1 ]; then
         printf "usage: eosiovalidate /path/to/snapshot.csv\n"
         printf "pattern: csv, e.g. https://raw.githubusercontent.com/eosauthority/genesis/master/snapshot-files/final/2/snapshot.csv\n"
@@ -16,8 +31,6 @@ eosiovalidate()
         printf "${SNAPSHOT} is not a file\n"
         return 1
     fi
-
-    eosiocheck || return 1
 
     cat ${SNAPSHOT} | tr ' ' '\n' | while read ln; do
         account=$(echo ${ln} | cut -d'"' -f4)
@@ -42,5 +55,34 @@ eosiovalidate()
             return 1
         fi
     done
+}
+
+eosiovalidate_contract()
+{
+    CONTRACT=$1  ; shift
+    WASM_PATH=$1 ; shift
+    if [ "$(${cleos} get code ${CONTRACT} | cut -d' ' -f3)" != "$(sha256sum ${WASM_PATH} | cut -d' ' -f1)" ]; then
+        printf "error: ${CONTRACT} sha256sum mismatch\n"
+        return 1
+    fi
+}
+
+eosiovalidate_contracts()
+{
+    if [ $# -lt 1 ]; then
+        printf "usage: eosiovalidate /path/to/built/contracts_dir\n"
+        return 1
+    fi
+
+    CONTRACTS_DIR=$1 ; shift
+    if [ ! -d ${CONTRACTS_DIR} ]; then
+        printf "error: ${CONTRACTS_DIR} file not found\n"
+        return 1
+    fi
+
+    eosiovalidate_contract "eosio" ${CONTRACTS_DIR}/eosio.bios/eosio.bios.wasm
+    eosiovalidate_contract "eosio.msig" ${CONTRACTS_DIR}/eosio.msig/eosio.msig.wasm
+    eosiovalidate_contract "eosio.system" ${CONTRACTS_DIR}/eosio.system/eosio.system.wasm
+    eosiovalidate_contract "eosio.token" ${CONTRACTS_DIR}/eosio.token/eosio.token.wasm
 }
 
