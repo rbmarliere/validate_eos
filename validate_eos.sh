@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source $(dirname "$0")/prompt_input_yN/prompt_input_yN.sh
+
 eosiovalidate()
 {
     if [ $# -lt 1 ]; then
