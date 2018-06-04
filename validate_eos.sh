@@ -32,7 +32,7 @@ eosiovalidate_snapshot()
         return 1
     fi
 
-    cat ${SNAPSHOT} | tr ' ' '\n' | while read ln; do
+    cat ${SNAPSHOT} | while read ln; do
         account=$(echo ${ln} | cut -d'"' -f4)
         pubkey=$(echo ${ln} | cut -d'"' -f6)
         balance=$(echo ${ln} | cut -d'"' -f8 | sed 's/\.//')
