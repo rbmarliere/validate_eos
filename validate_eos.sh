@@ -63,7 +63,13 @@ eosiovalidate_contract()
 {
     CONTRACT=$1  ; shift
     WASM_PATH=$1 ; shift
-    if [ "$(${cleos} get code ${CONTRACT} | cut -d' ' -f3)" != "$(sha256sum ${WASM_PATH} | cut -d' ' -f1)" ]; then
+    code=$(${cleos} get code ${CONTRACT} 2>/dev/null | cut -d' ' -f3)
+    sum=$(sha256sum ${WASM_PATH} | cut -d' ' -f1)
+    if [ "${code}" = "" ]; then
+        printf "error: code not found\n"
+        return 1
+    fi
+    if [ "${code}" != "${sum}" ]; then
         printf "error: ${CONTRACT} sha256sum mismatch\n"
         return 1
     fi
