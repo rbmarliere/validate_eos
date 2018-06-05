@@ -7,6 +7,7 @@ eosiovalidate()
     eosiocheck || return 1
 
     DATE=$(date +'%Y_%m_%d_%H_%M_%S')
+    out="/dev/stdout"
     if prompt_input_yN "write to error-${DATE}.log"; then
         out="error-${DATE}.log"
         touch ${out}
@@ -15,7 +16,7 @@ eosiovalidate()
     fi
 
     CHAIN=$(${cleos} get info | grep chain_id | cut -d'"' -f4)
-    printf "chain_id is ${CHAIN}\n\n" >> ${out:-/dev/stdout}
+    printf "chain_id is ${CHAIN}\n\n" >> ${out}
 
     eosiovalidate_accounts
 
@@ -45,11 +46,11 @@ eosiovalidate_supply()
 {
     max=$(${cleos} get currency stats eosio.token eos | grep max_supply | cut -d'"' -f4 | cut -d' ' -f1 | sed 's/\.//')
     if [ "${max}" != "100000000000000" ]; then
-        printf "error: max_supply is not 10000000000.0000 EOS (10bi)\n" >> ${out:-/dev/stdout}
+        printf "error: max_supply is not 10000000000.0000 EOS (10bi)\n" >> ${out}
     fi
     supply=$(${cleos} get currency stats eosio.token eos | grep '"supply"' | cut -d'"' -f4 | cut -d' ' -f1 | sed 's/\.//')
     if [ "${supply}" != "10000000000000" ]; then
-        printf "error: supply is not 1000000000.0000 EOS (1bi)\n" >> ${out:-/dev/stdout}
+        printf "error: supply is not 1000000000.0000 EOS (1bi)\n" >> ${out}
     fi
 }
 
@@ -66,9 +67,9 @@ eosiovalidate_contract()
     code=$(${cleos} get code ${CONTRACT} 2>/dev/null | cut -d' ' -f3)
     sum=$(sha256sum ${WASM_PATH} | cut -d' ' -f1)
     if [ "${code}" = "" ]; then
-        printf "error: contract ${CONTRACT} code not found\n" >> ${out:-/dev/stdout}
+        printf "error: contract ${CONTRACT} code not found\n" >> ${out}
     elif [ "${code}" != "${sum}" ]; then
-        printf "error: contract ${CONTRACT} hash mismatch\n" >> ${out:-/dev/stdout}
+        printf "error: contract ${CONTRACT} hash mismatch\n" >> ${out}
     fi
 }
 
@@ -85,9 +86,9 @@ eosiovalidate_contracts()
         return 1
     fi
 
-    eosiovalidate_contract "eosio" ${CONTRACTS_DIR}/eosio.bios/eosio.bios.wasm
+    #eosiovalidate_contract "eosio" ${CONTRACTS_DIR}/eosio.bios/eosio.bios.wasm
+    eosiovalidate_contract "eosio" ${CONTRACTS_DIR}/eosio.system/eosio.system.wasm
     eosiovalidate_contract "eosio.msig" ${CONTRACTS_DIR}/eosio.msig/eosio.msig.wasm
-    eosiovalidate_contract "eosio.system" ${CONTRACTS_DIR}/eosio.system/eosio.system.wasm
     eosiovalidate_contract "eosio.token" ${CONTRACTS_DIR}/eosio.token/eosio.token.wasm
 }
 
@@ -117,7 +118,7 @@ eosiovalidate_snapshot()
 
         chain_account=$(${cleos} get accounts ${pubkey} | grep "${account}" | sed 's/ \|"\|,//g')
         if [ "${chain_account}" != "${account}" ]; then
-            printf "error: account ${chain_account} does not have key ${pubkey}\n" >> ${out:-/dev/stdout}
+            printf "error: account ${chain_account} does not have key ${pubkey}\n" >> ${out}
         fi
 
         chain_liquid=$(${cleos} get currency balance eosio.token ${account} | cut -d' ' -f1 | sed 's/\.//')
@@ -125,7 +126,7 @@ eosiovalidate_snapshot()
         chain_netstake=$(${cleos} get account -j ${account} | grep '^  "net_weight": ' | cut -d' ' -f4 | sed 's/,\|"//g')
         chain_balance=$((${chain_liquid}+${chain_cpustake}+${chain_netstake}))
         if [ "${balance}" != "${chain_balance}" ]; then
-            printf "error: account ${account} has invalid balance ${chain_liquid} (liquid) + ${chain_cpustake} (cpu) + ${chain_netstake} (net) == ${chain_balance} != ${balance}\n" >> ${out:-/dev/stdout}
+            printf "error: account ${account} has invalid balance ${chain_liquid} (liquid) + ${chain_cpustake} (cpu) + ${chain_netstake} (net) == ${chain_balance} != ${balance}\n" >> ${out}
         fi
     done
 }
